@@ -22,6 +22,8 @@ export class InvalidTokenError extends Error {}
 
 InvalidTokenError.prototype.name = "InvalidTokenError";
 
+declare function atob(data: string): string;
+
 function b64DecodeUnicode(str: string) {
   return decodeURIComponent(
     atob(str).replace(/(.)/g, (m, p) => {
@@ -51,25 +53,17 @@ function base64UrlDecode(str: string) {
 
   try {
     return b64DecodeUnicode(output);
-  } catch (err) {
+  } catch (_err) {
     return atob(output);
   }
 }
 
-export function jwtDecode<T = JwtHeader>(
-  token: string,
-  options: JwtDecodeOptions & { header: true },
-): T;
-export function jwtDecode<T = JwtPayload>(token: string, options?: JwtDecodeOptions): T;
-export function jwtDecode<T = JwtHeader | JwtPayload>(
-  token: string,
-  options?: JwtDecodeOptions,
-): T {
+export function jwtDecode<T>(token: string, options?: JwtDecodeOptions & { header?: boolean }): T {
   if (typeof token !== "string") {
     throw new InvalidTokenError("Invalid token specified: must be a string");
   }
 
-  options ||= {};
+  options ??= {};
 
   const pos = options.header === true ? 0 : 1;
   const part = token.split(".")[pos];
